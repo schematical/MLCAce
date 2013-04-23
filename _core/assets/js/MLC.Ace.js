@@ -3,6 +3,7 @@ if(typeof MLC == 'undefined'){
 }
 MLC.Ace = {
     arrOnLoad:[],
+    Editors:{},
     Init:function(strControlId, strTheme){
         requirejs.config({
             //By default load any module IDs from js/lib
@@ -15,15 +16,15 @@ MLC.Ace = {
             MLC.Ace.split.setOrientation(MLC.Ace.split.BESIDE);
 
 
-            MLC.Ace.editor = MLC.Ace.split.$editors[0];
-            ;
-            console.log(MLC.Ace.editor);
+            MLC.Ace.Editors[strControlId] = MLC.Ace.split.$editors[0];
+            MLC.Ace.editor = MLC.Ace.Editors[strControlId];
+            console.log(MLC.Ace['strControlId']);
             for(var intIndex in MLC.Ace.arrOnLoad){
                 MLC.Ace.arrOnLoad[intIndex]();
             }
 
             function onResize() {
-                var left = $('#divSideNav').css('width');
+                var left = $('#pnlSideNav').css('width');
                 var width = document.documentElement.clientWidth - left;
                 MLC.Ace.jEle.css('width', width + "px");
                 MLC.Ace.jEle.css('height',document.documentElement.clientHeight + "px");
@@ -48,22 +49,26 @@ MLC.Ace = {
         if(typeof objData == 'undefined'){
             objData = new Object();
         }
-        objData.selected_text = MLC.Ace.editor.session.getTextRange(
-            MLC.Ace.editor.getSelectionRange()
-        );
-        objData.code = MLC.Ace.editor.getValue();
+        for(var strControlId in MLC.Ace.Editors){
+            objData[strControlId] = {};
+            objData[strControlId].selected_text = MLC.Ace.Editors[strControlId].session.getTextRange(
+                MLC.Ace.Editors[strControlId].getSelectionRange()
+            );
+            objData[strControlId].code = MLC.Ace.Editors[strControlId].getValue();
+        }
+
         MJax.TriggerControlEvent(objEvent, strSelector, strEvent, objData);
     },
-    Split:function(){
+    Split:function(strControlId){
         MLC.Ace.split.setSplits(2);
-        MLC.Ace.editor2 = MLC.Ace.split.getEditor(1);
-        MLC.Ace.editor2.setValue(MLC.Ace.editor.getValue());
+        MLC.Ace.Editors[strControlId] = MLC.Ace.split.getEditor(1);
+        MLC.Ace.Editors[strControlId].setValue(MLC.Ace.editor.getValue());
 
         var session = MLC.Ace.split.getEditor(0).session;
         //var newSession = MLC.Ace.split.setSession(session, 1);
 
         MLC.Ace.split.on("focus", function(editor) {
-
+            MLC.Ace.editor = editor;
         });
        /* MLC.Ace.editor.on("change", function(editor) {
             var strCode = MLC.Ace.editor.getValue();

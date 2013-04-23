@@ -1,12 +1,12 @@
 <?php
 class MLCAceEditorPanel extends MJaxPanel{
     public $strCode = null;
-
+    protected $blnInited = false;
     protected $strAceMode = null;
     protected $strAceTheme = null;
     protected $strFileLoc = null;
     protected $strSelected = null;
-
+    protected $pnlOlderSibbling = null;
     public function __construct($objParentControl, $strControlId = null){
         parent::__construct($objParentControl, $strControlId);
         $this->strTemplate = __MLC_ACE_CORE_VIEW__ . '/' . get_class($this) . '.tpl.php';
@@ -33,15 +33,26 @@ class MLCAceEditorPanel extends MJaxPanel{
 
 
     }
+    public function GetControlNamespace(){
+        return sprintf(
+            'MLC.Ace.Editors["%s"]',
+            $this->strControlId
+        );
+    }
+    public function SetOlderSibbling($pnlOlderSibbling){
+        $this->pnlOlderSibbling = $pnlOlderSibbling;
+    }
     public function Render($blnPrint = true, $blnAsAjax = false){
-        if(!$blnAsAjax){
+        if(!$this->blnInited){
             $this->objForm->AddJSCall(
                 $this->RenderJSInit()
             );
+
         }elseif($this->blnModified){
             $this->objForm->AddJSCall(
                 sprintf(
-                    'MLC.Ace.editor.setValue("%s");',
+                    '%s.setValue("%s");',
+                    $this->GetControlNamespace(),
                     $this->SanatizeCode()
                 )
             );
@@ -52,35 +63,47 @@ class MLCAceEditorPanel extends MJaxPanel{
     public function Insert($strCode){
         $this->objForm->AddJSCall(
             sprintf(
-                'MLC.Ace.editor.insert("%s");',
+                '%s.insert("%s");',
+                $this->GetControlNamespace(),
                 $this->SanatizeCode($strCode)
             )
         );
     }
-    public function Split(){
-        $this->objForm->AddJSCall('
-        MLC.Ace.AddOnLoad(function(){
-            MLC.Ace.Split();
-        });');
+    public function Split(MLCAceEditorPanel $pnlSplit){
+        $pnlSplit->SetOlderSibbling($pnlSplit);
+        $this->objForm->AddJSCall(
+            sprintf('
+                 MLC.Ace.AddOnLoad(function(){
+                    MLC.Ace.Split("%s");
+                });',
+                $pnlSplit->ControlId
+            )
+        );
     }
     public function RenderJSInit(){
+        $this->objForm->SkipMainWindowRender = true;
+        $this->blnInited = true;
         $strJS = '';
-        $strJS .= sprintf(
-            'MLC.Ace.Init("%s");',
-            $this->strControlId,
-            $this->strAceTheme
-        );
+        if(is_null($this->pnlOlderSibbling)){
+            $strJS .= sprintf(
+                'MLC.Ace.Init("%s");',
+                $this->strControlId,
+                $this->strAceTheme
+            );
+        }
         $strJS .= 'MLC.Ace.AddOnLoad(function(){';
         if(!is_null($this->strAceMode)){
             $strJS .= sprintf(
-              "MLC.Ace.editor.getSession().setMode('%s');",
+              "%s.getSession().setMode('%s');",
+               $this->GetControlNamespace(),
                $this->strAceMode
             );
         }
 
         if(!is_null($this->strCode)){
             $strJS .= sprintf(
-                "MLC.Ace.editor.setValue('%s');",
+                "%s.setValue('%s');",
+                $this->GetControlNamespace(),
                 str_replace("\n", '\n', addslashes($this->strCode))
             );
         }
@@ -95,30 +118,34 @@ class MLCAceEditorPanel extends MJaxPanel{
     }
     public function ParsePostData(){
         parent::ParsePostData();
-        if(array_key_exists('selected_text', $_POST)){
-            $this->strSelected = $_POST['selected_text'];
+        if(array_key_exists($this->strControlId, $_POST)){
+            $this->strSelected = $_POST[$this->strControlId]['selected_text'];
+            $this->strCode = $_POST[$this->strControlId]['code'];
         }
     }
     public function Find($strCode, $arrOptions = array()){
         $this->objForm->AddJSCall(
             sprintf(
-                'MLC.Ace.editor.find("%s", %s);',
+                '%s.find("%s", %s);',
+                $this->GetControlNamespace(),
                 $strCode,
                 json_encode($arrOptions)
             )
         );
     }
+
     public function Replace($mixCode){
         if(is_string($mixCode)){
             $strCode = '"' . addslashes($mixCode) . '"';
-        }elseif(is_array($strCode)){
+        }elseif(is_array($mixCode)){
             $strCode = json_encode($mixCode);
         }else{
             throw new MLCWrongTypeException(__FUNCTION__ , $mixCode);
         }
         $this->objForm->AddJSCall(
             sprintf(
-                'MLC.Ace.editor.replace(%s);',
+                '%s.replace(%s);',
+                $this->GetControlNamespace(),
                 $strCode
             )
         );
@@ -133,8 +160,18 @@ class MLCAceEditorPanel extends MJaxPanel{
         }
         $this->objForm->AddJSCall(
             sprintf(
-                'MLC.Ace.editor.replaceAll(%s);',
+                '%s.replaceAll(%s);',
+                $this->GetControlNamespace(),
                 $strCode
+            )
+        );
+    }
+    public function Resize(){
+        $this->objForm->AddJSCall(
+            sprintf(
+                'window.onresize();
+                %s.resize();',
+                $this->GetControlNamespace()
             )
         );
     }
