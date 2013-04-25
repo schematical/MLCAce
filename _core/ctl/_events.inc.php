@@ -1,24 +1,67 @@
 <?php
 class MLCAceEventBase extends MJaxEventBase{
+    protected $strAceSelector = null;
+    public function Init($mixTarget, $objAction){
+        parent::Init($mixTarget, $objAction);
+        $this->strAceSelector = $this->objControl->GetControlNamespace();
+    }
     public function Render(){
+
+            $strRendered = sprintf(
+                "MLC.Ace.AddOnLoad(function(){
+                    %s.getSession().selection.on('%s', %s);
+                });",
+                $this->strAceSelector,
+                $this->strEventName,
+                $this->objAction->Render()
+            );
+            $this->blnRendered = true;
+            return $strRendered;
+
+    }
+    public function RenderUnbind(){
+
+    }
+
+}
+class MLCAceChangeEvent extends MLCAceEventBase{
+    protected $strEventName = 'change';
+}
+class MLCAceChangeSelectionEvent extends MLCAceEventBase{
+    protected $strEventName = 'changeSelection';
+}
+class MLCAceChangeCursorEvent extends MLCAceEventBase{
+    protected $strEventName = 'changeCursor';
+}
+
+class MLCAceChangeSelectionEnd extends MLCAceEventBase{
+    protected $strEventName = 'mlc-ace-changeCursorEnd';
+
+    public function Render(){
+
         $strRendered = sprintf(
-            "MLC.Ace.editor.getSession().selection.on('%s', %s);",
-            $this->strEventName,
+            "MLC.Ace.AddOnLoad(function(){
+                %s.on('mouseup',function(objEvent){
+                     var strSelected = %s.session.getTextRange(%s.getSelectionRange());
+                     console.log(strSelected);
+                    if(strSelected.length > 1){
+                        (%s)(objEvent);
+                    }
+                });
+            });",
+            $this->strAceSelector,
+            $this->strAceSelector,
+            $this->strAceSelector,
             $this->objAction->Render()
         );
         $this->blnRendered = true;
         return $strRendered;
+
+    }
+    public function RenderUnbind(){
+
     }
 
-}
-class MLCAceChangeEvent extends MJaxEventBase{
-    protected $strEventName = 'change';
-}
-class MLCAceChangeSelectionEvent extends MJaxEventBase{
-    protected $strEventName = 'changeSelection';
-}
-class MLCAceChangeCursorEvent extends MJaxEventBase{
-    protected $strEventName = 'changeCursor';
 }
 
 
@@ -42,7 +85,7 @@ class MLCAceKeyBinding extends MLCAceEventBase{
     public function __toJS(){
         $strJS = sprintf(
             "MLC.Ace.AddOnLoad(function(){
-                MLC.Ace.editor.commands.addCommand({
+                %s.commands.addCommand({
                     name: '%s',
                     bindKey: {
                         win: '%s',
@@ -52,6 +95,7 @@ class MLCAceKeyBinding extends MLCAceEventBase{
                     readOnly: %s
                 });
             });",
+            $this->strAceSelector,
             $this->strName,
             $this->strWinKeys,
             $this->strMacKeys,

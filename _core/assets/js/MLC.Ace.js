@@ -23,22 +23,8 @@ MLC.Ace = {
                 MLC.Ace.arrOnLoad[intIndex]();
             }
 
-            function onResize() {
-                var left = $('#pnlSideNav').css('width');
-                var width = document.documentElement.clientWidth - left;
-                MLC.Ace.jEle.css('width', width + "px");
-                MLC.Ace.jEle.css('height',document.documentElement.clientHeight + "px");
-                MLC.Ace.jEle.css('left', left + "px");
-                MLC.Ace.split.resize();
-                $(MLC.Ace.split.$container).css('top', 40);
-                $(MLC.Ace.split.$container).css('left', left);
 
-                //consoleEl.style.width = width + "px";
-                //cmdLine.resize();
-            }
 
-            window.onresize = onResize;
-            onResize();
 
         });
     },
@@ -96,6 +82,42 @@ MLC.Ace = {
         s2.on('changeScrollTop', function(pos) {s1.setScrollTop(pos)});
         s1.on('changeScrollLeft', function(pos) {s2.setScrollLeft(pos)});
         s2.on('changeScrollLeft', function(pos) {s1.setScrollLeft(pos)});
+    },
+    SetOnResize:function(funOnResize){
+        if(typeof funOnResize != 'undefined'){
+            window.onresize = funOnResize;
+            funOnResize();
+        }
+    },
+    SetFullScreenResize:function(){
+        MLC.Ace.SetOnResize(function(){
+
+            var left = $('#pnlSideNav').css('width');
+            var width = document.documentElement.clientWidth - left;
+            MLC.Ace.jEle.css('width', width + "px");
+            MLC.Ace.jEle.css('height',document.documentElement.clientHeight + "px");
+            MLC.Ace.jEle.css('left', left + "px");
+            MLC.Ace.split.resize();
+            $(MLC.Ace.split.$container).css('top', 40);
+            $(MLC.Ace.split.$container).css('left', left);
+        });
+
+    },
+    SetParentStyleResize:function(){
+        MLC.Ace.SetOnResize(function(){
+
+            var left = $('#pnlSideNav').css('width');
+            var width = document.documentElement.clientWidth - left;
+            MLC.Ace.jEle.css('width', width + "px");
+            MLC.Ace.jEle.css('height',document.documentElement.clientHeight + "px");
+            MLC.Ace.jEle.css('left', left + "px");
+            MLC.Ace.split.resize();
+            $(MLC.Ace.split.$container).css('top', 40);
+            $(MLC.Ace.split.$container).css('left', left);
+        });
+
     }
+
+
 };
 

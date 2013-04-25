@@ -86,7 +86,7 @@ class MLCAceEditorPanel extends MJaxPanel{
         $strJS = '';
         if(is_null($this->pnlOlderSibbling)){
             $strJS .= sprintf(
-                'MLC.Ace.Init("%s");',
+                'MLC.Ace.Init("%s", "%s");',
                 $this->strControlId,
                 $this->strAceTheme
             );
@@ -175,6 +175,14 @@ class MLCAceEditorPanel extends MJaxPanel{
             )
         );
     }
+    public function SetFullScreenResize(){
+        $this->objForm->AddJSCall(
+            'MLC.Ace.AddOnLoad(function(){
+                MLC.Ace.SetFullScreenResize();
+            });'
+        );
+    }
+
     /////////////////////////
     // Public Properties: GET
     /////////////////////////
