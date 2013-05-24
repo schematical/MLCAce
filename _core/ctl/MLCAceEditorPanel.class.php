@@ -43,20 +43,23 @@ class MLCAceEditorPanel extends MJaxPanel{
         $this->pnlOlderSibbling = $pnlOlderSibbling;
     }
     public function Render($blnPrint = true, $blnAsAjax = false){
+
         if(!$this->blnInited){
             $this->objForm->AddJSCall(
                 $this->RenderJSInit()
             );
 
         }elseif($this->blnModified){
+            $strJS = sprintf(
+                '%s.setValue("%s");',
+                $this->GetControlNamespace(),
+                $this->SanatizeCode()
+            );
             $this->objForm->AddJSCall(
-                sprintf(
-                    '%s.setValue("%s");',
-                    $this->GetControlNamespace(),
-                    $this->SanatizeCode()
-                )
+                $strJS
             );
         }
+
         parent::Render($blnPrint, $blnAsAjax);
 
     }
@@ -206,7 +209,8 @@ class MLCAceEditorPanel extends MJaxPanel{
             case "AceMode": return $this->strAceMode = $mixValue;
             case "AceTheme": return $this->strAceTheme = $mixValue;
             case "Code": return $this->strCode = $mixValue;
-            case "Selected": return $this->strSelected = $mixValue;
+            case "Selected":
+                return $this->strSelected = $mixValue;
             default:
                 return parent::__set($strName, $mixValue);
 

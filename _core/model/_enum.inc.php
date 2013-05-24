@@ -7,5 +7,6 @@ abstract class MLCAceMode{
 }
 abstract class MLCAceTheme{
     const monokai = "ace/theme/monokai";
+    const chrome = "ace/theme/chrome";
     //TODO Add all themes
 }
